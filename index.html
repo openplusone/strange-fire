@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>斗破苍穹 · 异火榜</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+            "ogl": "https://cdn.jsdelivr.net/npm/ogl@1.0.11/src/index.js"
+        }
+    }
+    </script>
+    <style>
+:root{
+  --bg:#08080D;--bg2:#0F0F18;--fg:#F0E0CC;--muted:#7A6F63;
+  --accent:#FF6B35;--accent2:#E84545;--gold:#DAA520;
+  --card:rgba(15,15,24,0.88);--border:rgba(255,107,53,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--fg);overflow-x:hidden}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+
+.font-title{font-family:'Noto Serif SC',serif}
+
+/* ==================== Hero ==================== */
+#hero{position:relative;height:100vh;min-height:600px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#heroCanvas{position:absolute;inset:0;z-index:1}
+#evilEyeContainer{position:absolute;inset:0;z-index:0}
+#evilEyeContainer canvas{width:100%!important;height:100%!important;display:block}
+.hero-content{position:relative;z-index:2;text-align:center}
+
+/* GradientText (ReactBits GradientText) */
+.hero-title{font-size:clamp(3rem,8vw,6rem);font-weight:900;letter-spacing:.08em;color:#FFFFFF;
+  text-shadow:0 0 6px rgba(0,0,0,0.6),0 0 15px rgba(0,0,0,0.4),0 2px 3px rgba(0,0,0,0.5)}
+
+/* ShinyText (ReactBits ShinyText) */
+.shiny-text{
+  background-image:linear-gradient(120deg,var(--muted) 0%,var(--muted) 35%,var(--fg) 50%,var(--muted) 65%,var(--muted) 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-sub{font-size:clamp(1rem,2.5vw,1.4rem);color:#FFFFFF;margin-top:1rem;letter-spacing:.3em;font-weight:300;text-shadow:0 0 6px rgba(0,0,0,0.6),0 0 15px rgba(0,0,0,0.4),0 2px 3px rgba(0,0,0,0.5)}}}}}
+.hero-divider{width:120px;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:1.5rem auto}
+.hero-desc{max-width:600px;margin:0 auto;color:#FFFFFF;line-height:1.8;font-size:.95rem;text-shadow:0 0 6px rgba(0,0,0,0.6),0 0 15px rgba(0,0,0,0.4),0 2px 3px rgba(0,0,0,0.5)}}
+.scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);z-index:1;animation:bounce 2s infinite}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(10px)}}
+@keyframes rainbowShift{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+
+
+/* ==================== SpotlightCard (ReactBits SpotlightCard) ==================== */
+.flame-card{position:relative;background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:1.5rem;cursor:pointer;overflow:hidden;
+  transition:all .4s cubic-bezier(.4,0,.2,1);
+  --mouse-x:50%;--mouse-y:50%;--spotlight-color:rgba(255,107,53,0.15)}
+.flame-card::before{content:'';position:absolute;inset:0;border-radius:12px;
+  background:radial-gradient(circle at var(--mouse-x) var(--mouse-y),var(--spotlight-color),transparent 80%);
+  opacity:0;transition:opacity .5s ease;pointer-events:none;z-index:0}
+.flame-card:hover::before{opacity:1}
+.flame-card::after{content:'';position:absolute;inset:-1px;border-radius:12px;
+  background:var(--card-glow,linear-gradient(135deg,rgba(255,107,53,0.2),transparent));
+  opacity:0;transition:opacity .4s;z-index:0;pointer-events:none}
+.flame-card:hover::after{opacity:.5}
+.flame-card:hover{transform:translateY(-6px);border-color:var(--card-color,var(--accent));
+  box-shadow:0 0 30px -5px var(--card-color,var(--accent)),0 20px 40px -12px rgba(0,0,0,0.5),
+  inset 0 0 20px -10px var(--card-color,var(--accent))}
+.flame-card:hover .rank-num{
+  -webkit-text-fill-color:var(--card-color,var(--accent));
+  text-shadow:0 0 20px var(--card-color,var(--accent))}
+.flame-card>*{position:relative;z-index:1}
+.rank-num{font-size:2.2rem;font-weight:900;line-height:1;transition:all .4s;
+  background:linear-gradient(180deg,rgba(240,224,204,0.15),rgba(240,224,204,0.03));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.flame-name{font-size:1.2rem;font-weight:700;margin:.5rem 0 .25rem;display:inline-block}
+.flame-brief{font-size:.82rem;color:var(--muted);line-height:1.6;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.flame-holder{font-size:.75rem;color:var(--muted);margin-top:.75rem;
+  display:flex;align-items:center;gap:.4rem}
+.flame-holder i{font-size:.65rem}
+
+.card-orb{position:absolute;top:-20px;right:-20px;width:80px;height:80px;
+  border-radius:50%;filter:blur(30px);opacity:.15;transition:opacity .4s;pointer-events:none}
+.flame-card:hover .card-orb{opacity:.35}
+
+/* ClickSpark canvas */
+.click-spark-canvas{position:absolute;inset:0;pointer-events:none;z-index:10}
+
+/* ==================== 卡片内3D火焰 (Three.js FBM) ==================== */
+.card-fire-wrap{position:absolute;bottom:0;left:0;right:0;height:70%;overflow:visible;
+  pointer-events:none;z-index:0!important;transform-origin:center bottom;
+  transform:scaleY(0) scaleX(.6);opacity:0;
+  transition:transform .5s cubic-bezier(.4,0,.2,1),opacity .4s ease}
+.flame-card:hover .card-fire-wrap{transform:scaleY(1) scaleX(1);opacity:1}
+.card-fire-wrap canvas{width:100%!important;height:100%!important;display:block}
+
+/* 悬停火焰光晕 */
+.card-fire-glow{position:absolute;bottom:-20%;left:-15%;right:-15%;height:60%;
+  border-radius:50%;pointer-events:none;z-index:0!important;
+  opacity:0;transition:opacity .5s ease;filter:blur(25px)}
+.flame-card:hover .card-fire-glow{opacity:.4}
+
+/* ==================== 模态框 ==================== */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.8);
+  backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.active{opacity:1;pointer-events:all}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+  max-width:560px;width:90%;max-height:85vh;overflow-y:auto;position:relative;
+  transform:scale(.9) translateY(20px);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.modal-overlay.active .modal-box{transform:scale(1) translateY(0)}
+.modal-glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:200px;height:200px;border-radius:50%;filter:blur(80px);opacity:.3;pointer-events:none}
+
+/* 模态框火焰 */
+.modal-fire-wrap{position:absolute;bottom:0;left:0;right:0;height:85%;overflow:visible;
+  pointer-events:none;z-index:0!important;transform-origin:center bottom;
+  opacity:0;transform:scaleY(0) scaleX(.5);
+  transition:opacity .6s cubic-bezier(.4,0,.2,1),transform .6s cubic-bezier(.4,0,.2,1)}
+.modal-overlay.active .modal-fire-wrap{opacity:1;transform:scaleY(1) scaleX(1)}
+.modal-fire-wrap canvas{width:100%!important;height:100%!important;display:block}
+.modal-fire-glow{position:absolute;bottom:-15%;left:-15%;right:-15%;height:55%;
+  border-radius:50%;pointer-events:none;z-index:0!important;
+  opacity:0;transition:opacity .6s ease;filter:blur(35px)}
+.modal-overlay.active .modal-fire-glow{opacity:.5}
+#modalContent>*:not(.modal-fire-wrap):not(.modal-fire-glow){position:relative;z-index:1}
+.modal-close{position:absolute;top:1rem;right:1rem;width:36px;height:36px;border-radius:50%;
+  border:1px solid var(--border);background:rgba(15,15,24,0.8);color:var(--fg);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;z-index:1}
+.modal-close:hover{background:var(--accent);border-color:var(--accent)}
+.modal-rank{font-size:3.5rem;font-weight:900;line-height:1;opacity:.1}
+.modal-flame-name{font-size:2rem;font-weight:900;margin-top:-1rem;display:inline-block}
+.modal-divider{width:60px;height:2px;margin:1rem 0}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin:1rem 0}
+.info-item{background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:8px;padding:.75rem .85rem}
+.info-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.25rem}
+.info-value{font-size:.9rem;font-weight:500}
+
+
+/* ==================== BlurText (ReactBits BlurText) ==================== */
+.blur-text-wrap{display:flex;flex-wrap:wrap;justify-content:center;overflow:hidden}
+.blur-word{display:inline-block;will-change:transform,filter,opacity;
+  transition:filter .6s ease,opacity .6s ease,transform .6s ease;
+  filter:blur(10px);opacity:0;transform:translateY(20px)}
+.blur-word.visible{filter:blur(0px);opacity:1;transform:translateY(0)}
+
+/* ==================== 滚动动画 ==================== */
+.reveal{opacity:0;transform:translateY(30px);transition:all .7s cubic-bezier(.4,0,.2,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+.bg-glow{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none}
+
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:.75rem 1.5rem;color:var(--fg);font-size:.85rem;z-index:300;
+  transition:transform .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:768px){
+  .flame-card{padding:1.2rem}
+  .rank-num{font-size:1.6rem}
+  .info-grid{grid-template-columns:1fr}
+  .modal-flame-name{font-size:1.5rem}
+  .modal-rank{font-size:2.5rem}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:0s!important;transition-duration:0s!important}
+}
+</style>
+</head>
+<body>
+
+
+<!-- 英雄区 -->
+<section id="hero">
+  <div id="evilEyeContainer" style="position:absolute;inset:0;z-index:0"></div>
+  <canvas id="heroCanvas"></canvas>
+  <div class="hero-content">
+    <p class="hero-sub font-title">天地异火 · 万火之鉴</p>
+    <h1 class="hero-title font-title" id="heroTitle">异 火 榜</h1>
+    <div class="hero-divider"></div>
+    <p class="hero-desc" style="font-size:.95rem">
+      天地之间，异火频出。其焰可焚山煮海，可灭魂噬灵，可生万物亦可毁天地。纵观斗气大陆万载岁月，共出异火二十三，此为其榜。
+    </p>
+  </div>
+  <div class="scroll-hint">
+    <i class="fas fa-chevron-down" style="color:var(--muted);font-size:1.2rem"></i>
+  </div>
+</section>
+
+<!-- 异火总览 -->
+<section id="flames" class="py-20 px-4 relative">
+  <div class="bg-glow" style="width:400px;height:400px;background:rgba(255,107,53,0.06);top:10%;left:-10%"></div>
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-8 reveal">
+      <p class="text-sm tracking-widest mb-2 shiny-text" style="color:var(--accent)">天地异火</p>
+      <h2 class="font-title text-3xl sm:text-4xl font-bold mb-3 blur-text-wrap" data-blur-text>
+        贰拾叁异火
+      </h2>
+      <p style="color:var(--muted);max-width:500px;margin:0 auto" class="text-sm leading-relaxed">
+        每一朵异火皆乃天地造化之物，拥有毁灭与创造的双重力量
+      </p>
+    </div>
+
+    <!-- 卡片网格 -->
+    <div id="flameGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+    </div>
+
+    <div id="noResult" class="hidden text-center py-16" style="color:var(--muted)">
+      <i class="fas fa-fire-flame-curved text-3xl mb-4 block" style="opacity:.3"></i>
+      <p>未找到匹配的异火</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- 页脚 -->
+<footer class="py-12 px-4 border-t" style="border-color:var(--border)">
+  <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm" style="color:var(--muted)">
+    <div class="font-title font-bold" style="color:var(--accent)">
+      <i class="fas fa-fire-alt mr-2"></i>异火榜
+    </div>
+    <p>内容基于天蚕土豆小说《斗破苍穹》整理，仅供学习交流</p>
+    <div class="flex gap-4">
+      <a href="#hero" class="hover:text-white transition-colors"><i class="fas fa-arrow-up"></i> 回到顶部</a>
+    </div>
+  </div>
+</footer>
+
+<!-- 模态框 -->
+<div class="modal-overlay" id="modal" role="dialog" aria-modal="true">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-glow" id="modalGlow"></div>
+    <button class="modal-close" id="modalClose" aria-label="关闭"><i class="fas fa-times"></i></button>
+    <div class="p-6 sm:p-8" id="modalContent" style="position:relative;overflow:hidden">
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================== 中文大写数字 ==================== */
+const cnNums = ['零','壹','贰','叁','肆','伍','陆','柒','捌','玖','拾',
+  '拾壹','拾贰','拾叁','拾肆','拾伍','拾陆','拾柒','拾捌','拾玖','贰拾',
+  '贰拾壹','贰拾贰','贰拾叁'];
+function toCnRank(n){ return cnNums[n] || String(n); }
+
+/* ==================== 异火数据 ==================== */
+const flames = [
+  {rank:1,name:'帝炎',color:'#FFD700',colors:['#FF6B35','#00FF7F','#FFD700'],desc:'异火榜第一，万火之祖。陀舍古帝吞噬二十余种异火融合而成的至高帝炎，核心如流动琉璃蕴含万色流转，底层为古帝深邃黑，外围爆发出至高无上的白金神圣光晕。此火一出，万火臣服。',holder:'陀舍古帝 → 萧炎',origin:'万火融合',ability:'万火臣服、帝炎之威、万色琉璃',type:'毁灭型',stage:'大结局'},
+  {rank:2,name:'虚无吞炎',color:'#2D0A3E',colors:['#0D0D0D','#3D1A5C','#8B0000'],desc:'异火榜第二。可吞噬一切物质与能量的漆黑之火，核心为吸收一切光线的绝对黑，外围环绕暗紫色吞噬辉光，偶尔伴随极细的猩红能量闪电。魂天帝曾借此火吞噬无数强者。',holder:'魂天帝 → 魂殿殿主 → 萧炎',origin:'虚无空间深处',ability:'吞噬万物、虚无化、吞噬空间',type:'吞噬型',stage:'中后期'},
+  {rank:3,name:'净莲妖火',color:'#FFF5EE',colors:['#FFF5EE','#FF69B4','#FFD700'],desc:'异火榜第三。核心为无瑕乳白色，莲瓣边缘渐变为魅惑粉红，散发淡淡神圣金光。妖与净的矛盾之美，可制造独立空间，在空间内拥有近乎无敌之力。净莲妖圣曾以此火称霸一方。',holder:'净莲妖圣 → 萧炎',origin:'天地自然孕育',ability:'净化万物、妖火空间、化莲',type:'毁灭型',stage:'迦南学院后期'},
+  {rank:4,name:'金帝焚天炎',color:'#FFAA00',colors:['#FFAA00','#1E90FF','#FFD700'],desc:'异火榜第四。古族镇族之火，核心为刺眼赤金，火焰最外围因超高温呈现切割空间般的等离子湛蓝。燃烧之时可焚天煮海，拥有帝者之威。萧薰儿自幼修炼此火，实力深不可测。',holder:'古族 → 萧薰儿',origin:'远古时期',ability:'焚天煮海、帝炎之威',type:'毁灭型',stage:'贯穿全篇'},
+  {rank:5,name:'生灵之焱',color:'#00CC66',colors:['#00CC66','#7FFF00','#FFD700'],desc:'异火榜第五。主体如流动祖母绿宝石液，翻滚时泛出明亮青葱荧光，内部飘散如萤火虫般的淡金生命粒子。蕴含强大生命之力，可治愈万伤，是最具生机的异火。',holder:'远古强者 → 萧炎',origin:'生命之源',ability:'治愈万伤、生命之力、萤光粒子',type:'生命型',stage:'中后期'},
+  {rank:6,name:'八荒破灭焱',color:'#3A3A3A',colors:['#3A3A3A','#8B0000','#CC5500'],desc:'异火榜第六。炎族的破坏之火，主体为燃烧后的烬灰色，外围充满压迫感的暗红，爆发时呈现如生锈钢铁般的破败橙红。蕴含破灭之意，所过之处寸草不生。',holder:'陀舍古帝 → 萧炎',origin:'八荒之地',ability:'破灭八荒、毁灭之力',type:'毁灭型',stage:'后期'},
+  {rank:7,name:'九幽金祖火',color:'#8B7355',colors:['#8B7355','#CD7F32','#2F2F2F'],desc:'异火榜第七。非闪亮纯金，而是带有年代感的青铜金与暗金交织，火焰流转间带有如黑铁矿石般的暗色沉淀。刚猛厚重，蕴含九幽之气，可焚烧灵魂。',holder:'九幽族 → 萧炎',origin:'九幽深渊',ability:'焚烧灵魂、九幽之力、金祖之威',type:'灵魂型',stage:'后期'},
+  {rank:8,name:'红莲业火',color:'#8B0000',colors:['#8B0000','#DC143C','#FFD700'],desc:'异火榜第八。核心为深邃血红，向外过渡为晶莹剔透的红宝石色，火焰中穿插代表因果业力的极细金线。以情绪和罪业为食，被灼烧者业力越重痛苦越深。',holder:'药族 → 萧炎',origin:'业力凝聚',ability:'业力燃烧、红莲绽放、因果金线',type:'毁灭型',stage:'后期'},
+  {rank:9,name:'三千焱炎火',color:'#1A0A3E',colors:['#1A0A3E','#C0C0C0','#191970'],desc:'异火榜第九。以深邃紫黑为基底，火焰内部蕴含星云般的幽蓝过渡，不断闪烁着耀眼银白星辰光斑。极具浪漫与浩瀚感的星空之火，蕴含三千星辰之力。',holder:'焚炎谷 → 萧炎',origin:'星空深处',ability:'星辰之力、三千焱炎、星辉闪烁',type:'毁灭型',stage:'中期'},
+  {rank:10,name:'九幽风炎',color:'#1A1A2E',colors:['#1A1A2E','#008B8B','#00CED1'],desc:'异火榜第十。黑色主体中透出阴森孔雀蓝，火焰形态呈高速旋转的青色风刃轨迹，冷冽而诡异。风与火的融合，速度极快，可化为席卷天地的火焰风暴。',holder:'远古强者 → 萧炎',origin:'九幽风穴',ability:'风火融合、化风为炎、风刃之舞',type:'毁灭型',stage:'中后期'},
+  {rank:11,name:'骨灵冷火',color:'#E8E8E8',colors:['#E8E8E8','#00BFFF','#00FF7F'],desc:'异火榜第十一。核心为惨白骨色，外围覆盖极寒冰蓝光晕，飘散的火星带有一点阴森的幽灵碧绿。极寒之火非但不热反而极冷，是药尘与萧炎师徒情谊的象征。',holder:'药尘 → 萧炎',origin:'极寒之地',ability:'极寒之火、冰封万物、骨灵之威',type:'辅助型',stage:'早期'},
+  {rank:12,name:'九龙雷罡火',color:'#C0C0C0',colors:['#C0C0C0','#4B0082','#D0D0D0'],desc:'异火榜第十二。主体呈液态水银般的银白色，内部穿梭龙影带雷电独有的刺目靛青色，散发金属般银辉。雷与火的融合，攻击力极强。',holder:'丹塔 → 萧炎',origin:'雷霆之地',ability:'雷火融合、雷罡之力、九龙之威',type:'毁灭型',stage:'中期'},
+  {rank:13,name:'龟灵地火',color:'#6B4226',colors:['#6B4226','#FF8C00','#808080'],desc:'异火榜第十三。表层如灰褐坚硬岩石，裂隙中透出极度高温的岩浆亮橙，极具质量感。来自大地深处，厚重沉稳，防御力极强。',holder:'丹塔 → 萧炎',origin:'地底岩浆',ability:'地火之力、稳如磐石、龟灵之盾',type:'辅助型',stage:'中期'},
+  {rank:14,name:'陨落心炎',color:'#F5F5F5',colors:['#F5F5F5','#FAEBD7','#FFB6C1'],desc:'异火榜第十四。常态近乎透明，以空间扭曲折射体现存在；爆发时中心呈乳白色，伴随心脏跳动频率的玫瑰金微光。能大幅提升修炼速度，修炼者的至宝。',holder:'迦南学院 → 萧炎',origin:'天焚炼气塔',ability:'加速修炼、心火幻境、空间扭曲',type:'辅助型',stage:'迦南学院篇'},
+  {rank:15,name:'海心焰',color:'#003366',colors:['#003366','#00CED1','#FFFAF0'],desc:'异火榜第十五。如大海般深邃的深蓝核心，向外渐变为浅青水波，火苗顶端如海浪碎裂出的珍珠白。韩枫之火，深邃如海，暗藏凶险。',holder:'韩枫',origin:'深海之心',ability:'海心之力、潮汐之焰、深蓝之域',type:'毁灭型',stage:'中期'},
+  {rank:16,name:'火云水炎',color:'#FF6347',colors:['#FF6347','#F0F8FF','#87CEEB'],desc:'异火榜第十六。一半热烈晚霞橙红，一半水汽浅蓝，交界处是朦胧薄雾白。水火相融的奇景，打破了水火不容的常理，极具研究价值。',holder:'未知',origin:'水火交汇之地',ability:'水火交融、云焱之术、薄雾之障',type:'辅助型',stage:'未知'},
+  {rank:17,name:'火山石焰',color:'#1C1C1C',colors:['#1C1C1C','#FFD700','#8B0000'],desc:'异火榜第十七。仿佛刚从火山口喷出的石块，外层焦炭黑，裂缝中喷吐极其刺眼的硫磺黄和地心暗红。纯粹的地质破坏力。',holder:'未知',origin:'远古火山',ability:'岩石之力、火山之焰、地心熔岩',type:'辅助型',stage:'未知'},
+  {rank:18,name:'风怒龙炎',color:'#C2B280',colors:['#C2B280','#CC4422','#A0A0A0'],desc:'异火榜第十八。土黄色为主，夹杂被高温烧红的赤陶沙粒感，外圈有狂风卷尘形成的灰蒙光晕。沙漠中的风暴之火，狂暴不羁。',holder:'未知',origin:'荒漠龙穴',ability:'风怒之力、龙炎风暴、沙暴之焰',type:'毁灭型',stage:'未知'},
+  {rank:19,name:'青莲地心火',color:'#00CC99',colors:['#00CC99','#006644','#CC3300'],desc:'异火榜第十九。剔透翡翠青，边缘带莲叶幽绿，火焰最底部保留一抹熔岩赤红。萧炎获得的第一朵异火，因美杜莎女王蜕变而现世，开启了异火之路。',holder:'美杜莎 → 萧炎',origin:'塔戈尔大沙漠地底',ability:'地心之力、青莲绽放、翡翠之焰',type:'毁灭型',stage:'塔戈尔沙漠篇'},
+  {rank:20,name:'幽冥毒火',color:'#7FFF00',colors:['#7FFF00','#4B0082','#1A1A0A'],desc:'异火榜第二十。主体是极其刺眼让人不适的剧毒黄绿，外围缭绕暗紫毒瘴光晕，底部带沼泽沉淀黑。极具毒性的视觉警告，中毒者难以察觉。',holder:'未知',origin:'瘴气毒沼',ability:'剧毒之火、瘴气侵蚀、毒沼之力',type:'灵魂型',stage:'未知'},
+  {rank:21,name:'阴阳双炎',color:'#FFFFFF',colors:['#0A0A0A','#FFFFFF','#C0C0C0'],desc:'异火榜第二十一。极致的黑白对比——一半吸收光线的玄黑，一半刺目皓白，由流动的银光分界线隔开，呈双鱼游动。蕴含阴阳大道之力。',holder:'未知',origin:'阴阳交汇之地',ability:'阴阳之力、黑白双生、太极之焰',type:'毁灭型',stage:'未知'},
+  {rank:22,name:'万兽灵火',color:'#CC0000',colors:['#CC0000','#FFB300','#4A0028'],desc:'异火榜第二十二。充满野性的腥红色，万兽虚影由刺眼琥珀黄勾勒，底层透出沉重血脉暗霞。充满兽性的火焰，仿佛万兽奔腾其中。',holder:'未知',origin:'万兽栖所',ability:'万兽之灵、血脉之力、兽炎之威',type:'毁灭型',stage:'未知'},
+  {rank:23,name:'玄黄炎',color:'#2C2C3A',colors:['#2C2C3A','#C8A832','#808070'],desc:'异火榜第二十三。天地本源之色——上方外围呈代表天的玄青色，下方核心呈代表大地的苍黄，交织处是混沌灰蒙。虽排名最末，却蕴含天地初开之力。',holder:'未知',origin:'天地初开',ability:'玄黄之力、天地之焰、混沌之火',type:'毁灭型',stage:'未知'}
+];
+
+
+/* ==================== GradientText 动画 (ReactBits) ==================== */
+function initGradientText(){
+  const el = document.getElementById('heroTitle');
+  let progress = 0;
+  const speed = 0.3;
+  function animate(){
+    progress += speed;
+    if(progress > 100) progress = 0;
+    el.style.backgroundPosition = `${progress}% 50%`;
+    requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+/* ==================== ShinyText 动画 (ReactBits) ==================== */
+function initShinyText(){
+  const elements = document.querySelectorAll('.shiny-text');
+  elements.forEach((el, idx) => {
+    let progress = 150;
+    const speed = 0.5 + idx * 0.1;
+    const spread = 120;
+    const color = getComputedStyle(el).color || '#7A6F63';
+    const shineColor = '#F0E0CC';
+    el.style.backgroundImage = `linear-gradient(${spread}deg, var(--muted) 0%, var(--muted) 35%, var(--fg) 50%, var(--muted) 65%, var(--muted) 100%)`;
+    el.style.backgroundSize = '200% auto';
+    el.style.webkitBackgroundClip = 'text';
+    el.style.backgroundClip = 'text';
+    el.style.webkitTextFillColor = 'transparent';
+    function animate(){
+      progress -= speed;
+      if(progress < -50) progress = 150;
+      el.style.backgroundPosition = `${progress}% center`;
+      requestAnimationFrame(animate);
+    }
+    animate();
+  });
+}
+
+/* ==================== BlurText 动画 (ReactBits) ==================== */
+function initBlurText(){
+  document.querySelectorAll('[data-blur-text]').forEach(container => {
+    const text = container.textContent.trim();
+    const words = text.split('');
+    container.innerHTML = '';
+    words.forEach((char, i) => {
+      const span = document.createElement('span');
+      span.className = 'blur-word';
+      span.textContent = char === ' ' ? '\u00A0' : char;
+      span.style.transitionDelay = `${i * 40}ms`;
+      container.appendChild(span);
+    });
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if(entry.isIntersecting){
+        container.querySelectorAll('.blur-word').forEach(w => w.classList.add('visible'));
+        observer.unobserve(container);
+      }
+    }, { threshold: 0.1 });
+    observer.observe(container);
+  });
+}
+
+/* ==================== SpotlightCard 效果 (ReactBits) ==================== */
+function initSpotlightCards(){
+  document.querySelectorAll('.flame-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+    });
+  });
+}
+
+/* ==================== ClickSpark 效果 (ReactBits) ==================== */
+function createSparkCanvas(card){
+  const canvas = document.createElement('canvas');
+  canvas.className = 'click-spark-canvas';
+  card.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  let sparks = [];
+  let animId = null;
+
+  function resize(){
+    canvas.width = card.offsetWidth;
+    canvas.height = card.offsetHeight;
+  }
+  resize();
+  const ro = new ResizeObserver(resize);
+  ro.observe(card);
+
+  function draw(timestamp){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    sparks = sparks.filter(spark => {
+      const elapsed = timestamp - spark.startTime;
+      if(elapsed >= 400) return false;
+      const progress = elapsed / 400;
+      const eased = progress * (2 - progress);
+      const distance = eased * 30;
+      const lineLength = 8 * (1 - eased);
+      const color = spark.color;
+      const x1 = spark.x + distance * Math.cos(spark.angle);
+      const y1 = spark.y + distance * Math.sin(spark.angle);
+      const x2 = spark.x + (distance + lineLength) * Math.cos(spark.angle);
+      const y2 = spark.y + (distance + lineLength) * Math.sin(spark.angle);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 1 - progress;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      return true;
+    });
+    if(sparks.length > 0){
+      animId = requestAnimationFrame(draw);
+    } else {
+      animId = null;
+    }
+  }
+
+  card.addEventListener('click', e => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const color = getComputedStyle(card).getPropertyValue('--card-color').trim() || '#FF6B35';
+    const now = performance.now();
+    for(let i = 0; i < 8; i++){
+      sparks.push({
+        x, y,
+        angle: (2 * Math.PI * i) / 8,
+        startTime: now,
+        color: color
+      });
+    }
+    if(!animId) animId = requestAnimationFrame(draw);
+  });
+}
+
+
+/* ==================== Canvas 火焰粒子 ==================== */
+const heroCanvas = document.getElementById('heroCanvas');
+const heroCtx = heroCanvas.getContext('2d');
+let particles = [];
+let mouseX = 0, mouseY = 0;
+
+function resizeCanvas(){
+  heroCanvas.width = window.innerWidth;
+  heroCanvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+class Particle{
+  constructor(){ this.reset(); }
+  reset(){
+    this.x = Math.random() * heroCanvas.width;
+    this.y = heroCanvas.height + Math.random() * 100;
+    this.size = Math.random() * 3 + 1;
+    this.speedY = -(Math.random() * 2 + 0.5);
+    this.speedX = (Math.random() - 0.5) * 0.8;
+    this.life = 1;
+    this.decay = Math.random() * 0.005 + 0.003;
+    const colors = ['#FF6B35','#FFD700','#00FF7F','#00BFFF','#9370DB','#FF69B4','#FF4500','#FFAA33'];
+    this.color = colors[Math.floor(Math.random() * colors.length)];
+  }
+  update(){
+    const dx = this.x - mouseX;
+    const dy = this.y - mouseY;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist < 150 && dist > 0){
+      this.speedX += (dx / dist) * 0.1;
+      this.speedY += (dy / dist) * 0.05;
+    }
+    this.x += this.speedX;
+    this.y += this.speedY;
+    this.speedX *= 0.99;
+    this.life -= this.decay;
+    if(this.life <= 0) this.reset();
+  }
+  draw(){
+    heroCtx.save();
+    heroCtx.globalAlpha = this.life * 0.7;
+    heroCtx.fillStyle = this.color;
+    heroCtx.shadowColor = this.color;
+    heroCtx.shadowBlur = this.size * 6;
+    heroCtx.beginPath();
+    heroCtx.arc(this.x, this.y, Math.max(0.5, this.size * this.life), 0, Math.PI * 2);
+    heroCtx.fill();
+    heroCtx.restore();
+  }
+}
+
+for(let i = 0; i < 180; i++){
+  const p = new Particle();
+  p.y = Math.random() * heroCanvas.height;
+  p.life = Math.random();
+  particles.push(p);
+}
+
+function animateParticles(){
+  heroCtx.clearRect(0, 0, heroCanvas.width, heroCanvas.height);
+  const grd = heroCtx.createRadialGradient(heroCanvas.width/2, heroCanvas.height + 50, 10, heroCanvas.width/2, heroCanvas.height + 50, heroCanvas.height * 0.7);
+  grd.addColorStop(0, 'rgba(255,107,53,0.06)');
+  grd.addColorStop(1, 'rgba(255,107,53,0)');
+  heroCtx.fillStyle = grd;
+  heroCtx.fillRect(0, 0, heroCanvas.width, heroCanvas.height);
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+
+/* ==================== 卡片渲染 ==================== */
+const grid = document.getElementById('flameGrid');
+const noResult = document.getElementById('noResult');
+
+function renderCards(list){
+  grid.innerHTML = '';
+  if(list.length === 0){
+    noResult.classList.remove('hidden');
+    return;
+  }
+  noResult.classList.add('hidden');
+
+  list.forEach((f, i) => {
+    const isXiaoYan = f.holder.includes('萧炎');
+    const isRainbow = f.rank === 1;
+    const cs = f.colors || [f.color, f.color, f.color];
+    const card = document.createElement('div');
+    card.className = 'flame-card reveal';
+    card.style.setProperty('--card-color', f.color);
+    card.style.setProperty('--card-glow', `linear-gradient(135deg,${f.color}33,transparent)`);
+    card.style.setProperty('--spotlight-color', `${f.color}20`);
+    card.style.animationDelay = `${i * 0.05}s`;
+    card.setAttribute('role','button');
+    card.setAttribute('tabindex','0');
+    card.setAttribute('aria-label', `第${toCnRank(f.rank)}名 ${f.name}`);
+
+    const orbBg = isRainbow
+      ? 'conic-gradient(from 0deg,#FF6B35,#FFD700,#00FF7F,#00BFFF,#9370DB,#FF69B4,#FF6B35)'
+      : `radial-gradient(circle,${f.color}88,${f.color}22)`;
+    const glowBg = isRainbow
+      ? 'conic-gradient(from 0deg,#FF6B35,#FFD700,#00FF7F,#00BFFF,#9370DB,#FF69B4,#FF6B35)'
+      : f.color;
+    const nameStyle = isRainbow
+      ? `background:linear-gradient(90deg,#FF6B35,#FFD700,#00FF7F,#00BFFF,#9370DB,#FF69B4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;background-size:200% 100%;animation:rainbowShift 3s linear infinite`
+      : `color:${f.color}`;
+
+    card.innerHTML = `
+      <div class="card-orb" style="background:${orbBg}"></div>
+      <div class="card-fire-glow" style="background:${glowBg}"></div>
+      <div class="card-fire-wrap" data-fire-colors="${cs.join(',')}" data-fire-color="${f.color}" data-fire-rank="${f.rank}"></div>
+      <div class="rank-num font-title">${toCnRank(f.rank)}</div>
+      <div class="flame-name" style="${nameStyle}">${f.name}</div>
+      <p class="flame-brief">${f.desc}</p>
+      <div class="flame-holder">
+        <i class="fas fa-user"></i>
+        <span>${isXiaoYan ? f.holder.split('→').pop().trim() : '未归属'}</span>
+        ${isXiaoYan ? '<span style="color:var(--accent);margin-left:.3rem;font-size:.65rem"><i class="fas fa-check-circle"></i></span>' : ''}
+      </div>
+    `;
+
+    /* SpotlightCard mouse tracking */
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+      card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+    });
+
+    card.addEventListener('click', () => openModal(f));
+    card.addEventListener('keydown', e => { if(e.key === 'Enter') openModal(f); });
+
+    grid.appendChild(card);
+
+    /* ClickSpark for each card */
+    createSparkCanvas(card);
+  });
+
+  setTimeout(() => observeReveal(), 100);
+}
+
+/* 直接渲染全部卡片 */
+flames.sort((a,b) => a.rank - b.rank);
+renderCards(flames);
+if(window.initCardFires) window.initCardFires();
+
+/* ==================== 模态框 ==================== */
+const modal = document.getElementById('modal');
+const modalBox = document.getElementById('modalBox');
+const modalContent = document.getElementById('modalContent');
+const modalGlow = document.getElementById('modalGlow');
+const modalClose = document.getElementById('modalClose');
+
+function openModal(f){
+  const isXiaoYan = f.holder.includes('萧炎');
+  const isRainbow = f.rank === 1;
+  const cs = f.colors || [f.color, f.color, f.color];
+  const modalGlowBg = isRainbow
+    ? 'conic-gradient(from 0deg,#FF6B35,#FFD700,#00FF7F,#00BFFF,#9370DB,#FF69B4,#FF6B35)'
+    : `radial-gradient(circle,${f.color}66,${f.color}11)`;
+  const fireGlowBg = isRainbow
+    ? 'conic-gradient(from 0deg,#FF6B35,#FFD700,#00FF7F,#00BFFF,#9370DB,#FF69B4,#FF6B35)'
+    : f.color;
+  const rankStyle = isRainbow
+    ? `background:linear-gradient(135deg,#FF6B35,#FFD700,#00FF7F,#00BFFF,#9370DB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;background-size:200% 100%;animation:rainbowShift 3s linear infinite`
+    : `color:${f.color}`;
+  const nameStyle = isRainbow
+    ? `background:linear-gradient(90deg,#FF6B35,#FFD700,#00FF7F,#00BFFF,#9370DB,#FF69B4);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;background-size:200% 100%;animation:rainbowShift 3s linear infinite`
+    : `color:${f.color}`;
+  const dividerBg = isRainbow
+    ? 'linear-gradient(90deg,transparent,#FF6B35,#FFD700,#00FF7F,#00BFFF,#9370DB,transparent)'
+    : `linear-gradient(90deg,transparent,${f.color},transparent)`;
+  const infoColor = isRainbow ? '#FFD700' : f.color;
+
+  modalGlow.style.background = modalGlowBg;
+  modalContent.innerHTML = `
+    <div class="modal-fire-glow" style="background:${fireGlowBg}"></div>
+    <div class="modal-fire-wrap" data-modal-fire-colors="${cs.join(',')}" data-modal-fire-color="${f.color}" data-modal-fire-rank="${f.rank}"></div>
+    <div class="modal-rank font-title" style="${rankStyle}">${toCnRank(f.rank)}</div>
+    <h3 class="modal-flame-name font-title" style="${nameStyle}">${f.name}</h3>
+    <div class="modal-divider" style="background:${dividerBg}"></div>
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">类型</div>
+        <div class="info-value" style="color:${infoColor}">${f.type}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">持有者</div>
+        <div class="info-value">${f.holder}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">产地</div>
+        <div class="info-value">${f.origin}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">核心能力</div>
+        <div class="info-value">${f.ability}</div>
+      </div>
+    </div>
+    <p style="color:var(--muted);line-height:1.9;font-size:.9rem;margin-top:.5rem">${f.desc}</p>
+    ${isXiaoYan ? `<div style="margin-top:1.2rem;padding:.6rem 1rem;border-radius:8px;background:${f.color}11;border:1px solid ${f.color}33;font-size:.82rem;color:${f.color};display:flex;align-items:center;gap:.5rem">
+      <i class="fas fa-fire"></i> 此异火已被萧炎收服
+    </div>` : ''}
+  `;
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  /* 启动模态框火焰 */
+  if(window.initModalFire) window.initModalFire(f);
+  modalClose.focus();
+}
+
+function closeModal(){
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+  /* 停止模态框火焰 */
+  if(window.stopModalFire) window.stopModalFire();
+}
+
+modalClose.addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if(e.target === modal) closeModal(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+
+/* ==================== 滚动动画 ==================== */
+function observeReveal(){
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el => {
+    observer.observe(el);
+  });
+}
+observeReveal();
+
+/* ==================== Toast 提示 ==================== */
+function showToast(msg){
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+/* ==================== 初始化所有 ReactBits 效果 ==================== */
+window.addEventListener('load', () => {
+  initGradientText();
+  initShinyText();
+  initBlurText();
+  /* Three.js fire is loaded via ES module, wait for it to be available */
+  const fireInit = setInterval(() => {
+    if (window.initCardFires) {
+      window.initCardFires();
+      clearInterval(fireInit);
+    }
+  }, 100);
+});
+</script>
+
+<!-- ==================== Evil Eye 背景 (ReactBits EvilEye, OGL) ==================== -->
+<script type="module">
+import { Renderer, Program, Mesh, Triangle, Texture } from 'ogl';
+
+/* hex -> [r,g,b] 0-1 */
+function hexToVec3(hex){
+  const h = hex.replace('#','');
+  return [parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255];
+}
+
+/* 生成噪声纹理 (FBM 8 octaves) */
+function generateNoiseTexture(size=256){
+  const data = new Uint8Array(size*size*4);
+  function hash(x,y,s){
+    let n = x*374761393 + y*668265263 + s*1274126177;
+    n = Math.imul(n^(n>>>13), 1274126177);
+    return ((n^(n>>>16))>>>0)/4294967296;
+  }
+  function noise(px,py,freq,seed){
+    const fx=(px/size)*freq, fy=(py/size)*freq;
+    const ix=Math.floor(fx), iy=Math.floor(fy);
+    const tx=fx-ix, ty=fy-iy;
+    const w=freq|0;
+    const v00=hash(((ix%w)+w)%w,((iy%w)+w)%w,seed);
+    const v10=hash((((ix+1)%w)+w)%w,((iy%w)+w)%w,seed);
+    const v01=hash(((ix%w)+w)%w,(((iy+1)%w)+w)%w,seed);
+    const v11=hash((((ix+1)%w)+w)%w,(((iy+1)%w)+w)%w,seed);
+    return v00*(1-tx)*(1-ty)+v10*tx*(1-ty)+v01*(1-tx)*ty+v11*tx*ty;
+  }
+  for(let y=0;y<size;y++){
+    for(let x=0;x<size;x++){
+      let v=0, amp=0.4, totalAmp=0;
+      for(let o=0;o<8;o++){
+        const f=32*(1<<o);
+        v+=amp*noise(x,y,f,o*31);
+        totalAmp+=amp;
+        amp*=0.65;
+      }
+      v/=totalAmp;
+      v=(v-0.5)*2.2+0.5;
+      v=Math.max(0,Math.min(1,v));
+      const val=Math.round(v*255);
+      const i=(y*size+x)*4;
+      data[i]=val; data[i+1]=val; data[i+2]=val; data[i+3]=255;
+    }
+  }
+  return data;
+}
+
+/* 着色器 */
+const evilEyeVert = `
+  attribute vec2 uv;
+  attribute vec2 position;
+  varying vec2 vUv;
+  void main(){
+    vUv = uv;
+    gl_Position = vec4(position, 0, 1);
+  }
+`;
+
+const evilEyeFrag = `
+  precision highp float;
+  uniform float uTime;
+  uniform vec3 uResolution;
+  uniform sampler2D uNoiseTexture;
+  uniform float uPupilSize;
+  uniform float uIrisWidth;
+  uniform float uGlowIntensity;
+  uniform float uIntensity;
+  uniform float uScale;
+  uniform float uNoiseScale;
+  uniform vec2 uMouse;
+  uniform float uPupilFollow;
+  uniform float uFlameSpeed;
+  uniform vec3 uFlameColor;
+  uniform float uHueShift;
+  uniform vec3 uBgColor;
+  varying vec2 vUv;
+
+  /* HSV -> RGB */
+  vec3 hsv2rgb(vec3 c){
+    vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+  }
+
+  void main(){
+    vec2 uv = (gl_FragCoord.xy * 2.0 - uResolution.xy) / uResolution.y;
+    uv /= uScale;
+    float ft = uTime * uFlameSpeed;
+
+    float polarRadius = length(uv) * 2.0;
+    float polarAngle = (2.0 * atan(uv.x, uv.y)) / 6.28 * 0.3;
+    vec2 polarUv = vec2(polarRadius, polarAngle);
+
+    vec4 noiseA = texture2D(uNoiseTexture, polarUv * vec2(0.2, 7.0) * uNoiseScale + vec2(-ft * 0.1, 0.0));
+    vec4 noiseB = texture2D(uNoiseTexture, polarUv * vec2(0.3, 4.0) * uNoiseScale + vec2(-ft * 0.2, 0.0));
+    vec4 noiseC = texture2D(uNoiseTexture, polarUv * vec2(0.1, 5.0) * uNoiseScale + vec2(-ft * 0.1, 0.0));
+
+    float distanceMask = 1.0 - length(uv);
+
+    float innerRing = clamp(-1.0 * ((distanceMask - 0.7) / uIrisWidth), 0.0, 1.0);
+    innerRing = (innerRing * distanceMask - 0.2) / 0.28;
+    innerRing += noiseA.r - 0.5;
+    innerRing *= 1.3;
+    innerRing = clamp(innerRing, 0.0, 1.0);
+
+    float outerRing = clamp(-1.0 * ((distanceMask - 0.5) / 0.2), 0.0, 1.0);
+    outerRing = (outerRing * distanceMask - 0.1) / 0.38;
+    outerRing += noiseC.r - 0.5;
+    outerRing *= 1.3;
+    outerRing = clamp(outerRing, 0.0, 1.0);
+
+    innerRing += outerRing;
+
+    float innerEye = distanceMask - 0.1 * 2.0;
+    innerEye *= noiseB.r * 2.0;
+
+    vec2 pupilOffset = uMouse * uPupilFollow * 0.12;
+    vec2 pupilUv = uv - pupilOffset;
+    float pupil = 1.0 - length(pupilUv * vec2(9.0, 2.3));
+    pupil *= uPupilSize;
+    pupil = clamp(pupil, 0.0, 1.0);
+    pupil /= 0.35;
+
+    float outerEyeGlow = 1.0 - length(uv * vec2(0.5, 1.5));
+    outerEyeGlow = clamp(outerEyeGlow + 0.5, 0.0, 1.0);
+    outerEyeGlow += noiseC.r - 0.5;
+    float outerBgGlow = outerEyeGlow;
+    outerEyeGlow = pow(outerEyeGlow, 2.0);
+    outerEyeGlow += distanceMask;
+    outerEyeGlow *= uGlowIntensity;
+    outerEyeGlow = clamp(outerEyeGlow, 0.0, 1.0);
+    outerEyeGlow *= pow(1.0 - distanceMask, 3.0) * 2.5;
+
+    outerBgGlow += distanceMask;
+    outerBgGlow = pow(outerBgGlow, 0.8);
+    outerBgGlow *= 0.1;
+
+    /* 彩虹渐变：融合异火色 + 角度色相旋转 + 径向亮度 */
+    float r = length(uv);
+    float angle = atan(uv.y, uv.x);
+
+    /* 角度驱动的色相 (0~1 循环一圈)，加时间偏移实现流动 */
+    float hue = fract(angle / 6.2832 + 0.5 + uHueShift + ft * 0.005);
+
+    /* 径向饱和度：核心偏白 -> 中间饱和 -> 外围渐暗 */
+    float sat = smoothstep(0.0, 0.15, r) * (1.0 - smoothstep(0.7, 1.2, r) * 0.6);
+
+    /* 径向明度：核心亮 -> 外围暗 */
+    float val = 1.0 - smoothstep(0.1, 1.0, r) * 0.5;
+
+    vec3 rainbowColor = hsv2rgb(vec3(hue, sat, val));
+
+    /* 融合异火主色：在虹膜区域 (0.15~0.6) 混合火焰色 */
+    float flameBlend = smoothstep(0.1, 0.3, r) * (1.0 - smoothstep(0.5, 0.7, r));
+    vec3 gradientColor = mix(rainbowColor, uFlameColor * rainbowColor * 2.5, flameBlend * 0.45);
+
+    vec3 color = gradientColor * uIntensity * clamp(max(innerRing + innerEye, outerEyeGlow + outerBgGlow) - pupil, 0.0, 3.0);
+    color += uBgColor;
+
+    gl_FragColor = vec4(color, 1.0);
+  }
+`;
+
+/* 初始化 Evil Eye */
+(function initEvilEye(){
+  const container = document.getElementById('evilEyeContainer');
+  if(!container) return;
+
+  const renderer = new Renderer({ alpha: true, premultipliedAlpha: false });
+  const gl = renderer.gl;
+  gl.clearColor(0, 0, 0, 0);
+
+  /* 噪声纹理 */
+  const noiseData = generateNoiseTexture(256);
+  const noiseTexture = new Texture(gl, {
+    image: noiseData, width: 256, height: 256,
+    generateMipmaps: false, flipY: false
+  });
+  noiseTexture.minFilter = gl.LINEAR;
+  noiseTexture.magFilter = gl.LINEAR;
+  noiseTexture.wrapS = gl.REPEAT;
+  noiseTexture.wrapT = gl.REPEAT;
+
+  /* 鼠标跟踪 */
+  const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+  container.addEventListener('mousemove', e => {
+    const rect = container.getBoundingClientRect();
+    mouse.tx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.ty = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
+  });
+  container.addEventListener('mouseleave', () => { mouse.tx = 0; mouse.ty = 0; });
+
+  /* 程序 & 几何 */
+  let program;
+  const geometry = new Triangle(gl);
+
+  /* 配色：彩虹渐变 + 异火融合 */
+  const flameColor = '#FF6B35';   // 异火主色 (烈焰橙)
+  const bgColor    = '#08080D';
+
+  function resize(){
+    renderer.setSize(container.offsetWidth, container.offsetHeight);
+    if(program){
+      program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height, gl.canvas.width/gl.canvas.height];
+    }
+  }
+  window.addEventListener('resize', resize);
+
+  program = new Program(gl, {
+    vertex: evilEyeVert,
+    fragment: evilEyeFrag,
+    uniforms: {
+      uTime:         { value: 0 },
+      uResolution:   { value: [1, 1, 1] },
+      uNoiseTexture: { value: noiseTexture },
+      uPupilSize:    { value: 0.35 },
+      uIrisWidth:    { value: 0.25 },
+      uGlowIntensity:{ value: 0.7 },
+      uIntensity:    { value: 0.65 },
+      uScale:        { value: 0.85 },
+      uNoiseScale:   { value: 1.0 },
+      uMouse:        { value: [0, 0] },
+      uPupilFollow:  { value: 1.0 },
+      uFlameSpeed:   { value: 1.0 },
+      uFlameColor:   { value: hexToVec3(flameColor) },
+      uHueShift:     { value: 0.0 },
+      uBgColor:      { value: hexToVec3(bgColor) }
+    }
+  });
+
+  resize();
+
+  const mesh = new Mesh(gl, { geometry, program });
+  container.appendChild(gl.canvas);
+
+  /* 渲染循环 */
+  function update(time){
+    requestAnimationFrame(update);
+    mouse.x += (mouse.tx - mouse.x) * 0.05;
+    mouse.y += (mouse.ty - mouse.y) * 0.05;
+    program.uniforms.uMouse.value = [mouse.x, mouse.y];
+    program.uniforms.uTime.value = time * 0.001;
+    renderer.render({ scene: mesh });
+  }
+  requestAnimationFrame(update);
+})();
+</script>
+
+<!-- ==================== Three.js 卡片火焰着色器 (单渲染器 + drawImage 分发) ==================== -->
+<script type="module">
+import * as THREE from 'three';
+
+/* ==================== FBM 火焰着色器 ==================== */
+const fireVert = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const fireFrag = `
+  uniform float uTime;
+  uniform vec3 uColor1;
+  uniform vec3 uColor2;
+  uniform vec3 uColor3;
+  uniform float uSeed;
+  varying vec2 vUv;
+
+  float hash(vec2 p) {
+    return fract(sin(dot(p + uSeed, vec2(12.9898, 78.233))) * 43758.5453);
+  }
+
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+  }
+
+  float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));
+    for (int i = 0; i < 5; i++) {
+      v += a * noise(p);
+      p = rot * p * 2.0;
+      a *= 0.5;
+    }
+    return v;
+  }
+
+  void main() {
+    vec2 uv = vUv;
+    vec2 q = uv;
+    q.y -= uTime * 1.2;
+
+    float n = fbm(q * 3.5);
+
+    float mask = 1.0 - uv.y;
+    mask *= smoothstep(0.0, 0.3, uv.x) * smoothstep(1.0, 0.7, uv.x);
+    mask = pow(mask, 1.8);
+
+    float fire = n * mask;
+
+    vec3 col = vec3(0.0);
+    if (fire < 0.1) {
+      col = vec3(0.0);
+    } else if (fire < 0.3) {
+      col = mix(vec3(0.0), uColor1, (fire - 0.1) / 0.2);
+    } else if (fire < 0.6) {
+      col = mix(uColor1, uColor2, (fire - 0.3) / 0.3);
+    } else if (fire < 0.8) {
+      col = mix(uColor2, uColor3, (fire - 0.6) / 0.2);
+    } else {
+      col = mix(uColor3, vec3(1.0), (fire - 0.8) / 0.2);
+    }
+
+    col *= 1.8;
+    gl_FragColor = vec4(col, fire * mask * 2.0);
+  }
+`;
+
+/* 从主色派生暗色和亮色（支持 colors 数组或单色） */
+function deriveColors(mainHex, colorsArr) {
+  if (colorsArr && colorsArr.length >= 3) {
+    return {
+      dark: new THREE.Color(colorsArr[0]),
+      mid: new THREE.Color(colorsArr[1]),
+      bright: new THREE.Color(colorsArr[2])
+    };
+  }
+  const c = new THREE.Color(mainHex);
+  const hsl = {};
+  c.getHSL(hsl);
+  const dark = new THREE.Color().setHSL(hsl.h, hsl.s * 0.9, Math.max(hsl.l * 0.4, 0.05));
+  const mid = c.clone();
+  const bright = new THREE.Color().setHSL(hsl.h, Math.min(hsl.s * 0.6, 1), Math.min(hsl.l * 1.5 + 0.3, 1));
+  return { dark, mid, bright };
+}
+
+/* ==================== 单一 WebGL 渲染器 + 离屏渲染 ==================== */
+const FIRE_W = 128, FIRE_H = 128;
+
+const offscreenCanvas = document.createElement('canvas');
+offscreenCanvas.width = FIRE_W;
+offscreenCanvas.height = FIRE_H;
+
+const renderer = new THREE.WebGLRenderer({
+  canvas: offscreenCanvas,
+  antialias: false,
+  alpha: true,
+  powerPreference: 'low-power'
+});
+renderer.setSize(FIRE_W, FIRE_H, false);
+renderer.setPixelRatio(1);
+
+const scene = new THREE.Scene();
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+const geometry = new THREE.PlaneGeometry(2, 2);
+const fireMaterials = new Map();
+
+function createFireMaterial(mainHex, rank, colorsArr) {
+  const colors = deriveColors(mainHex, colorsArr);
+  const uniforms = {
+    uTime: { value: 0 },
+    uColor1: { value: colors.dark },
+    uColor2: { value: colors.mid },
+    uColor3: { value: colors.bright },
+    uSeed: { value: rank * 0.37 }
+  };
+  return new THREE.ShaderMaterial({
+    vertexShader: fireVert,
+    fragmentShader: fireFrag,
+    uniforms,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+}
+
+const fireMesh = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
+  vertexShader: fireVert, fragmentShader: 'void main(){gl_FragColor=vec4(0.);}',
+  transparent: true
+}));
+scene.add(fireMesh);
+
+/* ==================== 每张卡片的 2D canvas ==================== */
+const cardSlots = new Map();
+const hoveredFires = new Set(); // 当前 hover 的卡片
+const fadeOutFires = new Map(); // rank -> fadeOut 开始时间
+let globalRAF = null;
+let clock;
+const FADE_DURATION = 600; // 淡出时间 ms
+
+function setupCardCanvas(wrapEl, rank) {
+  const displayCanvas = document.createElement('canvas');
+  displayCanvas.style.cssText = 'width:100%!important;height:100%!important;display:block;';
+  wrapEl.appendChild(displayCanvas);
+
+  const w = Math.max(1, Math.round(wrapEl.offsetWidth));
+  const h = Math.max(1, Math.round(wrapEl.offsetHeight));
+  displayCanvas.width = w;
+  displayCanvas.height = h;
+
+  const displayCtx = displayCanvas.getContext('2d');
+  cardSlots.set(rank, { wrapEl, displayCanvas, displayCtx, card: wrapEl.parentElement });
+
+  /* 绑定 hover 事件 */
+  const card = wrapEl.parentElement;
+  if (card) {
+    card.addEventListener('mouseenter', () => {
+      hoveredFires.add(rank);
+      fadeOutFires.delete(rank);
+    });
+    card.addEventListener('mouseleave', () => {
+      hoveredFires.delete(rank);
+      fadeOutFires.set(rank, performance.now());
+    });
+  }
+}
+
+/* ==================== 渲染循环 (hover + 淡出 + 模态框) ==================== */
+function startFireLoop() {
+  if (globalRAF) return;
+  clock = new THREE.Clock();
+
+  function loop() {
+    globalRAF = requestAnimationFrame(loop);
+    const t = clock.getElapsedTime();
+    const now = performance.now();
+
+    /* 清理已淡出完毕的卡片 */
+    fadeOutFires.forEach((startTime, rank) => {
+      if (now - startTime > FADE_DURATION) fadeOutFires.delete(rank);
+    });
+
+    /* 渲染卡片火焰 (仅 hover + 淡出中的) */
+    const hasCardWork = hoveredFires.size > 0 || fadeOutFires.size > 0;
+    if (hasCardWork) {
+      cardSlots.forEach((slot, rank) => {
+        const isHovered = hoveredFires.has(rank);
+        const isFading = fadeOutFires.has(rank);
+
+        if (!isHovered && !isFading) {
+          slot.displayCtx.clearRect(0, 0, slot.displayCanvas.width, slot.displayCanvas.height);
+          return;
+        }
+        if (!fireMaterials.has(rank)) return;
+
+        const mat = fireMaterials.get(rank);
+        mat.uniforms.uTime.value = t;
+        fireMesh.material = mat;
+        renderer.render(scene, camera);
+
+        const { displayCanvas, displayCtx } = slot;
+        displayCtx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
+
+        if (isHovered) {
+          displayCtx.globalAlpha = 1;
+        } else {
+          const fadeStart = fadeOutFires.get(rank);
+          const elapsed = now - fadeStart;
+          displayCtx.globalAlpha = Math.max(0, 1 - elapsed / FADE_DURATION);
+        }
+
+        displayCtx.drawImage(offscreenCanvas, 0, 0, displayCanvas.width, displayCanvas.height);
+        displayCtx.globalAlpha = 1;
+      });
+    }
+
+    /* 渲染模态框火焰 */
+    if (modalSlot) {
+      const isActive = modalActive;
+      const isFadingOut = !isActive && modalFadeStart > 0;
+
+      if (isActive || isFadingOut) {
+        if (fireMaterials.has(modalSlot.matKey)) {
+          const mat = fireMaterials.get(modalSlot.matKey);
+          mat.uniforms.uTime.value = t;
+          fireMesh.material = mat;
+          renderer.render(scene, camera);
+
+          const { displayCanvas, displayCtx } = modalSlot;
+          displayCtx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
+
+          if (isActive) {
+            displayCtx.globalAlpha = 1;
+          } else {
+            const elapsed = now - modalFadeStart;
+            displayCtx.globalAlpha = Math.max(0, 1 - elapsed / 600);
+            if (elapsed > 600) {
+              displayCtx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
+              modalSlot = null;
+              modalFadeStart = 0;
+              displayCtx.globalAlpha = 1;
+              return;
+            }
+          }
+
+          displayCtx.drawImage(offscreenCanvas, 0, 0, displayCanvas.width, displayCanvas.height);
+          displayCtx.globalAlpha = 1;
+        }
+      } else if (!isActive && modalFadeStart === 0) {
+        modalSlot = null;
+      }
+    }
+  }
+  loop();
+}
+
+/* ==================== 初始化入口 ==================== */
+let fireInited = false;
+
+function initCardFires() {
+  cardSlots.clear();
+  hoveredFires.clear();
+  fadeOutFires.clear();
+  fireMaterials.clear();
+
+  document.querySelectorAll('.card-fire-wrap').forEach(wrap => {
+    const color = wrap.dataset.fireColor;
+    const rank = parseInt(wrap.dataset.fireRank);
+    if (!color || !rank) return;
+
+    const colorsArr = wrap.dataset.fireColors ? wrap.dataset.fireColors.split(',') : null;
+    fireMaterials.set(rank, createFireMaterial(color, rank, colorsArr));
+
+    setupCardCanvas(wrap, rank);
+  });
+
+  if (!fireInited) {
+    fireInited = true;
+    startFireLoop();
+  }
+
+  if (!fireResizeBound) {
+    fireResizeBound = true;
+    window.addEventListener('resize', () => {
+      cardSlots.forEach((slot) => {
+        const w = Math.max(1, Math.round(slot.wrapEl.offsetWidth));
+        const h = Math.max(1, Math.round(slot.wrapEl.offsetHeight));
+        if (slot.displayCanvas.width !== w || slot.displayCanvas.height !== h) {
+          slot.displayCanvas.width = w;
+          slot.displayCanvas.height = h;
+        }
+      });
+    });
+  }
+}
+
+let fireResizeBound = false;
+window.initCardFires = initCardFires;
+
+/* ==================== 模态框火焰 (使用同一个渲染器) ==================== */
+const MODAL_FIRE_KEY = '__modal__';
+let modalSlot = null;
+let modalActive = false;
+let modalFadeStart = 0;
+
+function initModalFire(flameData) {
+  const wrapEl = document.querySelector('.modal-fire-wrap');
+  if (!wrapEl) return;
+
+  /* 创建材质（使用 rank 保证唯一 seed） */
+  const matKey = MODAL_FIRE_KEY + flameData.rank;
+  if (!fireMaterials.has(matKey)) {
+    const colorsArr = flameData.colors || null;
+    fireMaterials.set(matKey, createFireMaterial(flameData.color, flameData.rank, colorsArr));
+  }
+
+  /* 如果已有旧 canvas 先移除 */
+  const oldCanvas = wrapEl.querySelector('canvas');
+  if (oldCanvas) oldCanvas.remove();
+
+  /* 创建新的 2D display canvas */
+  const displayCanvas = document.createElement('canvas');
+  displayCanvas.style.cssText = 'width:100%!important;height:100%!important;display:block;';
+  wrapEl.appendChild(displayCanvas);
+
+  const w = Math.max(1, Math.round(wrapEl.offsetWidth));
+  const h = Math.max(1, Math.round(wrapEl.offsetHeight));
+  displayCanvas.width = w;
+  displayCanvas.height = h;
+
+  const displayCtx = displayCanvas.getContext('2d');
+  modalSlot = { wrapEl, displayCanvas, displayCtx, matKey };
+  modalActive = true;
+  modalFadeStart = 0;
+
+  /* 确保 fire loop 运行 */
+  if (!fireInited) {
+    fireInited = true;
+    startFireLoop();
+  }
+}
+
+function stopModalFire() {
+  modalActive = false;
+  modalFadeStart = performance.now();
+}
+
+window.initModalFire = initModalFire;
+window.stopModalFire = stopModalFire;
+</script>
+</body>
+</html>
